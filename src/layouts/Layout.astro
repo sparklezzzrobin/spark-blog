@@ -3,6 +3,7 @@ import "../styles/global.css";
 import "katex/dist/katex.min.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import ContourBackground from "../components/ContourBackground.astro";
 
 interface Props {
   title: string;
@@ -43,6 +44,7 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
     </script>
   </head>
   <body class="flex min-h-screen flex-col">
+    <ContourBackground />
     <Header />
     <main class="flex-1">
       <slot />

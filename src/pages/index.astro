@@ -32,25 +32,8 @@ const directions = [
 ---
 
 <Layout title="spark.geo">
-  <!-- 1. Hero：10 秒内说明"你是谁、做什么" -->
-  <section class="relative overflow-hidden border-b border-border">
-    <!-- 等高线纹理：GIS 隐喻，克制地退到背景 -->
-    <svg
-      class="pointer-events-none absolute -right-32 -top-24 h-[28rem] w-[28rem] text-border opacity-70 dark:opacity-40"
-      viewBox="0 0 400 400"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1"
-      aria-hidden="true"
-    >
-      <path d="M200 40c70 0 130 50 140 120s-40 150-110 170S80 310 60 240 90 90 200 40Z" />
-      <path d="M205 75c55 8 100 45 108 98s-28 118-88 134-135-25-150-90S110 62 205 75Z" />
-      <path d="M210 110c40 10 72 38 78 78s-20 88-68 100-98-20-108-70 40-120 98-108Z" />
-      <path d="M215 145c28 8 48 28 52 56s-12 60-45 68-64-14-71-46 26-86 64-78Z" />
-      <path d="M220 180c15 6 26 18 28 34s-6 34-24 39-34-8-38-28 14-49 34-45Z" />
-      <circle cx="222" cy="210" r="2.5" class="text-primary" fill="currentColor" stroke="none" />
-    </svg>
-
+  <!-- 1. Hero：10 秒内说明"你是谁、做什么"（等高线水印在 Layout 全站层） -->
+  <section class="border-b border-border">
     <div class="relative mx-auto max-w-4xl px-4 py-24 sm:px-6 sm:py-28">
       <div class="fade-up">
         <p class="mb-4 font-mono text-sm text-primary">
