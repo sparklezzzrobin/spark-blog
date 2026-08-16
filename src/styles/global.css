@@ -1,1 +1,164 @@
 @import "tailwindcss";
+
+/* 手动暗色模式：html.dark 触发（配合导航栏切换按钮） */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 语义色映射到 CSS 变量，明暗两套值在 :root / .dark 中定义 */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+
+  --font-sans: "Inter", -apple-system, "PingFang SC", "Microsoft YaHei",
+    "Noto Sans SC", "Segoe UI", sans-serif;
+  /* 等宽字体是"技术感"的核心载体：坐标、日期、标签、代码 */
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, "Cascadia Code",
+    Consolas, monospace;
+}
+
+:root {
+  --bg: #fafafa;
+  --card: #ffffff;
+  --fg: #18181b;
+  --muted: #71717a;
+  --primary: #0d7377; /* 深青：水体/植被遥感色系 */
+  --primary-strong: #0a5c5f;
+  --accent: #c2a878; /* 暖沙：等高线点缀色 */
+  --border: #e4e4e7;
+}
+
+.dark {
+  --bg: #0f1115;
+  --card: #171a21;
+  --fg: #e4e4e7;
+  --muted: #9ca3af;
+  --primary: #2dd4bf;
+  --primary-strong: #5eead4;
+  --accent: #d8c39a;
+  --border: #27272a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-primary/20;
+  }
+}
+
+/* ---------- 文章正文排版（手写，不引 typography 插件） ---------- */
+.prose-custom {
+  @apply text-fg;
+  font-size: 1.0625rem;
+  line-height: 1.9; /* 中文阅读行高 */
+}
+
+.prose-custom > * + * {
+  @apply mt-5;
+}
+
+.prose-custom h2 {
+  @apply mt-12 mb-4 text-2xl font-bold tracking-tight;
+}
+
+.prose-custom h3 {
+  @apply mt-10 mb-3 text-xl font-bold tracking-tight;
+}
+
+.prose-custom a {
+  @apply text-primary underline decoration-primary/30 underline-offset-4;
+}
+
+.prose-custom a:hover {
+  @apply decoration-primary;
+}
+
+.prose-custom strong {
+  @apply font-semibold;
+}
+
+.prose-custom ul {
+  @apply list-disc pl-6;
+}
+
+.prose-custom ol {
+  @apply list-decimal pl-6;
+}
+
+.prose-custom li + li {
+  @apply mt-1.5;
+}
+
+.prose-custom blockquote {
+  @apply border-l-2 border-primary/40 pl-4 text-muted italic;
+}
+
+.prose-custom code:not(pre code) {
+  @apply rounded bg-fg/8 px-1.5 py-0.5 font-mono text-[0.875em];
+}
+
+.prose-custom pre {
+  @apply overflow-x-auto rounded-lg border border-border px-4 py-3.5 font-mono text-sm leading-relaxed;
+}
+
+.prose-custom table {
+  @apply w-full border-collapse text-sm;
+}
+
+.prose-custom th {
+  @apply border border-border bg-card px-3 py-2 text-left font-semibold;
+}
+
+.prose-custom td {
+  @apply border border-border px-3 py-2;
+}
+
+.prose-custom img {
+  @apply rounded-lg border border-border;
+}
+
+.prose-custom hr {
+  @apply my-10 border-border;
+}
+
+/* Shiki 代码块双主题：暗色模式下切换到 dark 主题变量 */
+.dark .astro-code,
+.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+}
+
+/* 页面进入动画：安静的生命感 */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fade-up 0.3s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    animation: none;
+  }
+}
