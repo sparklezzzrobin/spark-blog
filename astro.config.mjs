@@ -11,8 +11,8 @@ import rehypeKatex from "rehype-katex";
 export default defineConfig({
   // 开发工具栏（dev-only 的底部浮动菜单）关闭，生产构建本就不包含它
   devToolbar: { enabled: false },
-  // TODO: 绑定自定义域名后替换为真实地址（影响 RSS 链接与 sitemap）
-  site: "https://spark-geo.example.com",
+  // 站点正式地址（影响 RSS 链接、sitemap、Open Graph 的绝对路径）
+  site: "https://spark-blog-phi.vercel.app",
   integrations: [sitemap()],
   markdown: {
     // Unified 处理器：使用 remark/rehype 生态插件（数学公式渲染）
