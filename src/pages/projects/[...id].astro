@@ -1,0 +1,157 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const projects = (await getCollection("projects")).sort((a, b) =>
+    b.data.year === a.data.year
+      ? Number(b.data.featured) - Number(a.data.featured)
+      : b.data.year - a.data.year,
+  );
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const { name, description, tech, status, year, link, repo, tags } = project.data;
+
+const projects = (await getCollection("projects")).sort((a, b) =>
+  b.data.year === a.data.year
+    ? Number(b.data.featured) - Number(a.data.featured)
+    : b.data.year - a.data.year,
+);
+
+const index = projects.findIndex((p) => p.id === project.id);
+const prev = index > 0 ? projects[index - 1] : null;
+const next = index < projects.length - 1 ? projects[index + 1] : null;
+
+// 相关文章：项目 tags 与文章 tags 有交集即关联（手动互链交给未来，先自动化）
+const relatedPosts = (await getCollection("posts"))
+  .filter((post) => post.data.tags.some((t) => tags.includes(t)))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<Layout title={name} description={description}>
+  <article class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <nav class="mb-8">
+      <a href="/projects/" class="font-mono text-xs text-muted hover:text-primary">
+        ← 全部项目
+      </a>
+    </nav>
+
+    <header class="mb-10 border-b border-border pb-8">
+      <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs">
+        <span class="flex items-center gap-1.5 text-muted">
+          <span
+            class:list={["h-1.5 w-1.5 rounded-full", status === "进行中" ? "bg-primary" : "bg-accent"]}
+          ></span>
+          {status}
+        </span>
+        <span class="text-border">|</span>
+        <span class="text-muted">{year}</span>
+        <span class="text-border">|</span>
+        {
+          tech.map((t) => (
+            <span class="rounded bg-primary/10 px-2 py-0.5 text-primary">{t}</span>
+          ))
+        }
+      </div>
+      <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+        {name}
+      </h1>
+      <p class="mt-4 leading-relaxed text-muted">{description}</p>
+
+      {
+        (link || repo) && (
+          <div class="mt-6 flex flex-wrap gap-3">
+            {link && (
+              <a
+                href={link}
+                target="_blank"
+                rel="noopener"
+                class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-strong"
+              >
+                访问项目
+              </a>
+            )}
+            {repo && (
+              <a
+                href={repo}
+                target="_blank"
+                rel="noopener"
+                class="rounded-md border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
+              >
+                查看源码
+              </a>
+            )}
+          </div>
+        )
+      }
+    </header>
+
+    <div class="prose-custom fade-up">
+      <Content />
+    </div>
+
+    {
+      relatedPosts.length > 0 && (
+        <section class="mt-16 border-t border-border pt-8">
+          <h2 class="mb-4 font-mono text-sm text-primary">// 相关文章</h2>
+          <div class="divide-y divide-border">
+            {relatedPosts.map((post) => (
+              <a
+                href={`/posts/${post.id}/`}
+                class="group flex items-baseline gap-4 py-3"
+              >
+                <time
+                  datetime={post.data.pubDate.toISOString()}
+                  class="shrink-0 font-mono text-xs text-muted"
+                >
+                  {fmt(post.data.pubDate)}
+                </time>
+                <span class="font-medium group-hover:text-primary">
+                  {post.data.title}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      (prev || next) && (
+        <nav class="mt-12 grid gap-3 border-t border-border pt-8 sm:grid-cols-2">
+          {prev && (
+            <a
+              href={`/projects/${prev.id}/`}
+              class="group rounded-lg border border-border p-4 transition-colors hover:border-primary/50"
+            >
+              <span class="font-mono text-xs text-muted">上一个项目</span>
+              <p class="mt-1 text-sm font-medium group-hover:text-primary">
+                {prev.data.name}
+              </p>
+            </a>
+          )}
+          {next && (
+            <a
+              href={`/projects/${next.id}/`}
+              class="group rounded-lg border border-border p-4 text-right transition-colors hover:border-primary/50 sm:col-start-2"
+            >
+              <span class="font-mono text-xs text-muted">下一个项目</span>
+              <p class="mt-1 text-sm font-medium group-hover:text-primary">
+                {next.data.name}
+              </p>
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </article>
+</Layout>

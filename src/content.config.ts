@@ -1,5 +1,5 @@
 import { defineCollection, z } from "astro:content";
-import { glob, file } from "astro/loaders";
+import { glob } from "astro/loaders";
 
 /**
  * 文章集合：每篇一个 md 文件，frontmatter 是唯一元数据来源。
@@ -19,13 +19,13 @@ const posts = defineCollection({
 });
 
 /**
- * 项目集合：单一 JSON 数据文件描述所有项目。
- * 加项目 = 在 projects.json 加一条数据，不动任何页面。
+ * 项目集合：与文章同构（md + frontmatter + 正文）。
+ * frontmatter 驱动列表卡片，正文渲染详情页；
+ * tags 用于自动关联同主题文章。
  */
 const projects = defineCollection({
-  loader: file("src/data/projects.json"),
+  loader: glob({ pattern: "**/*.md", base: "./src/content/projects" }),
   schema: z.object({
-    id: z.string(),
     name: z.string(),
     description: z.string(),
     tech: z.array(z.string()).default([]),
@@ -34,6 +34,7 @@ const projects = defineCollection({
     link: z.string().url().optional(),
     repo: z.string().url().optional(),
     featured: z.boolean().default(false),
+    tags: z.array(z.string()).default([]),
   }),
 });
 

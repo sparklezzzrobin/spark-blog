@@ -10,10 +10,18 @@ const { name, description, tech, status, year, link, repo } = project.data;
 ---
 
 <article
-  class="flex flex-col rounded-lg border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50"
+  class="group relative flex flex-col rounded-lg border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50"
 >
   <div class="mb-2 flex items-center justify-between">
-    <h3 class="font-semibold tracking-tight">{name}</h3>
+    <h3 class="font-semibold tracking-tight">
+      <!-- 拉伸链接：标题链接铺满整卡，实现"点卡片任意位置进详情" -->
+      <a
+        href={`/projects/${project.id}/`}
+        class="after:absolute after:inset-0 group-hover:text-primary"
+      >
+        {name}
+      </a>
+    </h3>
     <span class="flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-muted">
       <span class:list={[
         "h-1.5 w-1.5 rounded-full",
@@ -37,7 +45,7 @@ const { name, description, tech, status, year, link, repo } = project.data;
 
   {
     (link || repo) && (
-      <div class="mt-4 flex gap-3 border-t border-border pt-3 text-sm">
+      <div class="relative z-10 mt-4 flex gap-3 border-t border-border pt-3 text-sm">
         {link && (
           <a
             href={link}
