@@ -1,0 +1,29 @@
+[
+  {
+    "id": "green-space-change",
+    "name": "城市绿地变化分析",
+    "description": "基于多时相 Landsat 影像的城市绿地提取与变化检测：NDVI 阈值分割、转移矩阵统计、变化制图全流程。",
+    "tech": ["Python", "GDAL", "NumPy", "Matplotlib"],
+    "status": "已完成",
+    "year": 2026,
+    "featured": true
+  },
+  {
+    "id": "s2-ndvi-timeseries",
+    "name": "Sentinel-2 NDVI 时序分析",
+    "description": "用 Sentinel-2 Level-2A 数据构建研究区 NDVI 年内时序曲线，分析植被物候特征并与气象数据对照。",
+    "tech": ["Python", "rasterio", "pandas", "Sentinel-2"],
+    "status": "进行中",
+    "year": 2026,
+    "featured": true
+  },
+  {
+    "id": "spark-blog",
+    "name": "spark.geo（本站）",
+    "description": "从设计规范到部署上线的个人博客：Astro + Tailwind，静态生成，写作即 Git 提交。",
+    "tech": ["Astro", "Tailwind CSS", "TypeScript"],
+    "status": "进行中",
+    "year": 2026,
+    "featured": true
+  }
+]
