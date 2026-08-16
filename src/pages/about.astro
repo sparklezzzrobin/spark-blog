@@ -1,0 +1,79 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+// TODO: 以下个人信息为占位内容，上线前替换为真实信息
+const skills = [
+  { group: "地理空间", items: ["ArcGIS / QGIS", "ENVI", "遥感影像处理", "制图"] },
+  { group: "编程", items: ["Python", "GDAL / rasterio", "NumPy / pandas", "数据结构"] },
+  { group: "正在学习", items: ["算法", "Web 开发", "JavaScript / TypeScript", "数据可视化"] },
+];
+---
+
+<Layout title="关于" description="关于 spark：GIS / 遥感方向，正在学习 Python 与现代 Web 开发。">
+  <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <header class="mb-10">
+      <p class="mb-2 font-mono text-sm text-primary">// about</p>
+      <h1 class="text-3xl font-bold tracking-tight">关于我</h1>
+    </header>
+
+    <section class="prose-custom">
+      <p>
+        你好，我是 <strong>Spark</strong>。主修方向是
+        <strong>GIS 与遥感</strong>，日常和影像、坐标、地图打交道。
+      </p>
+      <p>
+        目前正在系统学习 <strong>Python、数据结构与算法和 Web 开发</strong>。
+        我相信地理空间和现代编程的结合（GeoAI、数据可视化、WebGIS）
+        是很有价值的方向，这个博客就是这条路上的公开学习档案。
+      </p>
+      <blockquote>
+        这个站点本身也是一个项目：从设计规范、技术选型到部署上线，
+        全过程都记录在文章里。
+      </blockquote>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="mb-4 text-lg font-bold tracking-tight">技能与方向</h2>
+      <div class="grid gap-4 sm:grid-cols-3">
+        {
+          skills.map(({ group, items }) => (
+            <div class="rounded-lg border border-border bg-card p-4">
+              <h3 class="mb-3 font-mono text-xs text-primary">{group}</h3>
+              <ul class="space-y-1.5 text-sm text-muted">
+                {items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="mb-4 text-lg font-bold tracking-tight">联系我</h2>
+      <div class="flex flex-wrap gap-3">
+        <a
+          href="https://github.com/"
+          target="_blank"
+          rel="noopener"
+          class="rounded-md border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
+        >
+          GitHub
+        </a>
+        <a
+          href="mailto:hello@example.com"
+          class="rounded-md border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
+        >
+          Email
+        </a>
+        <a
+          href="/rss.xml"
+          class="rounded-md border border-border px-4 py-2 font-mono text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
+        >
+          RSS
+        </a>
+      </div>
+    </section>
+  </div>
+</Layout>

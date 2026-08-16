@@ -1,0 +1,50 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const { title, description, pubDate, tags, series } = post.data;
+const dateStr = pubDate.toISOString().slice(0, 10);
+---
+
+<article class="group py-5" data-tags={tags.join(" ")}>
+  <div class="flex items-baseline gap-4">
+    <time datetime={pubDate.toISOString()} class="shrink-0 font-mono text-xs text-muted">
+      {dateStr}
+    </time>
+    <div class="min-w-0">
+      <h3 class="font-medium leading-snug">
+        <a
+          href={`/posts/${post.id}/`}
+          class="transition-colors group-hover:text-primary"
+        >
+          {title}
+        </a>
+      </h3>
+      {
+        series && (
+          <span class="mr-2 inline-block font-mono text-[11px] text-accent">
+            {series}
+          </span>
+        )
+      }
+      {
+        tags.length > 0 && (
+          <span class="font-mono text-[11px] text-muted">
+            {tags.map((t) => `#${t}`).join(" ")}
+          </span>
+        )
+      }
+      {
+        description && (
+          <p class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted">
+            {description}
+          </p>
+        )
+      }
+    </div>
+  </div>
+</article>

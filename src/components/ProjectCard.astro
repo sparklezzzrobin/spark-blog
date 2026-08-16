@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+}
+
+const { project } = Astro.props;
+const { name, description, tech, status, year, link, repo } = project.data;
+---
+
+<article
+  class="flex flex-col rounded-lg border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50"
+>
+  <div class="mb-2 flex items-center justify-between">
+    <h3 class="font-semibold tracking-tight">{name}</h3>
+    <span class="flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-muted">
+      <span class:list={[
+        "h-1.5 w-1.5 rounded-full",
+        status === "进行中" ? "bg-primary" : "bg-accent",
+      ]}></span>
+      {status} · {year}
+    </span>
+  </div>
+
+  <p class="flex-1 text-sm leading-relaxed text-muted">{description}</p>
+
+  <div class="mt-4 flex flex-wrap gap-1.5">
+    {
+      tech.map((t) => (
+        <span class="rounded bg-primary/10 px-2 py-0.5 font-mono text-[11px] text-primary">
+          {t}
+        </span>
+      ))
+    }
+  </div>
+
+  {
+    (link || repo) && (
+      <div class="mt-4 flex gap-3 border-t border-border pt-3 text-sm">
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener"
+            class="text-primary hover:underline underline-offset-4"
+          >
+            访问 →
+          </a>
+        )}
+        {repo && (
+          <a
+            href={repo}
+            target="_blank"
+            rel="noopener"
+            class="text-muted hover:text-primary"
+          >
+            源码
+          </a>
+        )}
+      </div>
+    )
+  }
+</article>

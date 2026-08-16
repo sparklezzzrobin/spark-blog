@@ -1,0 +1,92 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import PostRow from "../../components/PostRow.astro";
+
+const posts = (await getCollection("posts")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const tagCount = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+  }
+}
+const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<Layout title="文章" description="全部技术笔记、实践记录与踩坑复盘，支持按标签筛选。">
+  <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+    <header class="mb-8">
+      <p class="mb-2 font-mono text-sm text-primary">// posts</p>
+      <h1 class="text-3xl font-bold tracking-tight">文章</h1>
+      <p class="mt-2 text-sm text-muted">
+        共 {posts.length} 篇 · 学习笔记 / 实践记录 / 踩坑复盘
+      </p>
+    </header>
+
+    <!-- 标签筛选：受控词表，一屏放得下 -->
+    <div class="mb-4 flex flex-wrap gap-2" id="tag-filter">
+      <button
+        type="button"
+        data-tag="*"
+        class="tag-btn rounded-full border border-primary/60 bg-primary/10 px-3 py-1 font-mono text-xs text-primary"
+      >
+        全部
+      </button>
+      {
+        tags.map(([tag, count]) => (
+          <button
+            type="button"
+            data-tag={tag}
+            class="tag-btn rounded-full border border-border px-3 py-1 font-mono text-xs text-muted transition-colors hover:border-primary/50 hover:text-primary"
+          >
+            {tag} <span class="opacity-60">{count}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="divide-y divide-border" id="post-list">
+      {posts.map((post) => <PostRow post={post} />)}
+    </div>
+
+    <p id="empty-hint" class="hidden py-12 text-center font-mono text-sm text-muted">
+      // 该标签下暂无文章
+    </p>
+  </div>
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".tag-btn");
+  const rows = document.querySelectorAll<HTMLElement>("#post-list article");
+  const emptyHint = document.getElementById("empty-hint");
+
+  // 支持 /posts/?tag=xxx 直达
+  const initial = new URLSearchParams(location.search).get("tag");
+  if (initial) activate(initial);
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => activate(btn.dataset.tag ?? "*"));
+  });
+
+  function activate(tag: string) {
+    buttons.forEach((btn) => {
+      const on = btn.dataset.tag === tag;
+      btn.classList.toggle("border-primary/60", on);
+      btn.classList.toggle("bg-primary/10", on);
+      btn.classList.toggle("text-primary", on);
+      btn.classList.toggle("border-border", !on);
+      btn.classList.toggle("text-muted", !on);
+    });
+
+    let visible = 0;
+    rows.forEach((row) => {
+      const show = tag === "*" || (row.dataset.tags ?? "").split(" ").includes(tag);
+      row.classList.toggle("hidden", !show);
+      if (show) visible++;
+    });
+    emptyHint?.classList.toggle("hidden", visible > 0);
+  }
+</script>

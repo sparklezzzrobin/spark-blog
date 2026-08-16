@@ -1,0 +1,94 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const posts = (await getCollection("posts")).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  );
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, description, pubDate, updated, tags, series } = post.data;
+
+const posts = (await getCollection("posts")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const index = posts.findIndex((p) => p.id === post.id);
+const newer = index > 0 ? posts[index - 1] : null; // 列表按新→旧排序
+const older = index < posts.length - 1 ? posts[index + 1] : null;
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<Layout title={title} description={description}>
+  <article class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <header class="mb-10 border-b border-border pb-8">
+      {
+        series && (
+          <p class="mb-3 font-mono text-xs text-accent">
+            {series} 系列
+          </p>
+        )
+      }
+      <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+        {title}
+      </h1>
+      <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted">
+        <time datetime={pubDate.toISOString()}>{fmt(pubDate)}</time>
+        {
+          updated && (
+            <span>
+              · 更新于 <time datetime={updated.toISOString()}>{fmt(updated)}</time>
+            </span>
+          )
+        }
+        <span class="text-border">|</span>
+        {tags.map((t) => (
+          <a href={`/posts/?tag=${t}`} class="hover:text-primary">
+            #{t}
+          </a>
+        ))}
+      </div>
+    </header>
+
+    <div class="prose-custom fade-up">
+      <Content />
+    </div>
+
+    {
+      (older || newer) && (
+        <nav class="mt-16 grid gap-3 border-t border-border pt-8 sm:grid-cols-2">
+          {older && (
+            <a
+              href={`/posts/${older.id}/`}
+              class="group rounded-lg border border-border p-4 transition-colors hover:border-primary/50"
+            >
+              <span class="font-mono text-xs text-muted">← 上一篇</span>
+              <p class="mt-1 text-sm font-medium group-hover:text-primary">
+                {older.data.title}
+              </p>
+            </a>
+          )}
+          {newer && (
+            <a
+              href={`/posts/${newer.id}/`}
+              class="group rounded-lg border border-border p-4 text-right transition-colors hover:border-primary/50 sm:col-start-2"
+            >
+              <span class="font-mono text-xs text-muted">下一篇 →</span>
+              <p class="mt-1 text-sm font-medium group-hover:text-primary">
+                {newer.data.title}
+              </p>
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </article>
+</Layout>

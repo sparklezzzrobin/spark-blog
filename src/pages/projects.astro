@@ -1,0 +1,27 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+
+const projects = (await getCollection("projects")).sort((a, b) =>
+  b.data.year === a.data.year
+    ? Number(b.data.featured) - Number(a.data.featured)
+    : b.data.year - a.data.year,
+);
+---
+
+<Layout title="项目" description="GIS / 遥感 / Web 方向的个人项目与实践成果。">
+  <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+    <header class="mb-8">
+      <p class="mb-2 font-mono text-sm text-primary">// projects</p>
+      <h1 class="text-3xl font-bold tracking-tight">项目</h1>
+      <p class="mt-2 text-sm text-muted">
+        做过的事，比说过的话有说服力。
+      </p>
+    </header>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      {projects.map((p) => <ProjectCard project={p} />)}
+    </div>
+  </div>
+</Layout>
