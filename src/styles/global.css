@@ -56,6 +56,9 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Windows 经典滚动条占布局宽度：内容不足一屏的页面（如项目列表）没有
+       滚动条，切换页面时视口宽度变化会让居中的导航栏左右跳动，统一预留 */
+    scrollbar-gutter: stable;
   }
 
   body {
