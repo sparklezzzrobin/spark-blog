@@ -164,6 +164,68 @@
   mix-blend-mode: normal;
 }
 
+/* ---------- 全局搜索弹窗 ---------- */
+/* 原生 dialog：top layer 定位，天然盖过吸顶导航；停在视口上 1/3 处 */
+#search-dialog {
+  width: calc(100% - 2rem);
+  max-width: 36rem;
+  margin: min(12vh, 6rem) auto auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.35);
+  color: var(--fg);
+}
+
+#search-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(2px);
+  animation: search-fade 150ms ease-out;
+}
+
+#search-dialog[open] {
+  animation: search-pop 150ms ease-out;
+}
+
+@keyframes search-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes search-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 打开时锁背景滚动；scrollbar-gutter: stable 已预留空间，锁定不会引起布局跳动 */
+html:has(#search-dialog[open]) {
+  overflow: hidden;
+}
+
+/* 命中高亮：与 ::selection 同一主色调 */
+#search-dialog mark {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+  color: inherit;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #search-dialog[open],
+  #search-dialog::backdrop {
+    animation: none;
+  }
+}
+
 /* 页面进入动画：安静的生命感 */
 @keyframes fade-up {
   from {

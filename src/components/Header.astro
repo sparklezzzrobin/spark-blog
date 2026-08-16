@@ -1,4 +1,6 @@
 ---
+import SearchDialog from "./SearchDialog.astro";
+
 const navLinks = [
   { href: "/posts/", label: "文章" },
   { href: "/projects/", label: "项目" },
@@ -17,6 +19,8 @@ const isActive = (href: string) =>
     <a href="/" class="font-mono text-base font-semibold tracking-tight">
       spark<span class="text-primary">.geo</span>
     </a>
+
+    <SearchDialog />
 
     <nav class="flex items-center gap-1 sm:gap-2">
       {

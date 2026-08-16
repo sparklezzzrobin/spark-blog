@@ -1,0 +1,347 @@
+<!-- 全局搜索入口（桌面胶囊 + 移动图标）与 Cmd/Ctrl+K 弹窗。
+     索引由 /search.json 构建期生成，首次打开弹窗才加载，零依赖。 -->
+
+<!-- 桌面端：置于 logo 与导航之间的长胶囊，hint 键位由脚本按平台改成 ⌘ K -->
+<button
+  type="button"
+  data-search-open
+  aria-label="打开搜索"
+  aria-keyshortcuts="Control+K Meta+K /"
+  class="hidden h-9 w-full max-w-64 items-center gap-2.5 rounded-full border border-border bg-card/60 px-4 text-sm text-muted/80 transition-colors hover:border-primary/50 hover:text-primary sm:flex"
+>
+  <svg
+    class="h-4 w-4 shrink-0"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.8"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+    ></path>
+  </svg>
+  <span class="truncate">搜索文章、项目…</span>
+  <kbd
+    id="search-kbd"
+    class="ml-auto shrink-0 rounded-md border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-muted/80"
+  >
+    Ctrl K
+  </kbd>
+</button>
+
+<!-- 移动端：图标按钮，与主题切换按钮同款 -->
+<button
+  type="button"
+  data-search-open
+  aria-label="打开搜索"
+  class="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:text-primary sm:hidden"
+>
+  <svg
+    class="h-4 w-4"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.8"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+    ></path>
+  </svg>
+</button>
+
+<!-- 弹窗本体：原生 dialog 位于 top layer，天然盖过吸顶导航，无需 z-index -->
+<dialog id="search-dialog" aria-label="全站搜索">
+  <!-- 输入行：text-base 防 iOS 聚焦缩放 -->
+  <div class="flex items-center gap-3 border-b border-border px-4">
+    <svg
+      class="h-4 w-4 shrink-0 text-muted"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.8"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      ></path>
+    </svg>
+    <input
+      id="search-input"
+      type="text"
+      placeholder="搜索文章、项目…"
+      autocomplete="off"
+      spellcheck="false"
+      maxlength="64"
+      role="combobox"
+      aria-expanded="true"
+      aria-controls="search-results"
+      aria-autocomplete="list"
+      class="h-12 w-full bg-transparent text-base text-fg outline-none placeholder:text-muted sm:text-sm"
+    />
+    <kbd
+      class="shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted/80"
+    >
+      esc
+    </kbd>
+  </div>
+
+  <!-- 结果列表：max-h 兜底小屏，overscroll-contain 防滚动穿透 -->
+  <div class="max-h-[min(24rem,50vh)] overflow-y-auto overscroll-contain p-2">
+    <ul id="search-results" role="listbox" aria-label="搜索结果"></ul>
+  </div>
+
+  <!-- 底部提示条 -->
+  <div class="flex items-center justify-between border-t border-border px-4 py-2">
+    <span class="font-mono text-[11px] text-muted">↑↓ 选择 · ↵ 打开 · esc 关闭</span>
+    <span id="search-count" class="font-mono text-[11px] text-muted/70"></span>
+  </div>
+</dialog>
+
+<script>
+  type SearchItem = {
+    type: "post" | "project";
+    title: string;
+    description: string;
+    tags: string[];
+    extra: string;
+    meta: string;
+    url: string;
+    pinned: boolean;
+    body: string;
+  };
+
+  const dialog = document.getElementById("search-dialog") as HTMLDialogElement | null;
+  const input = document.getElementById("search-input") as HTMLInputElement | null;
+  const list = document.getElementById("search-results") as HTMLUListElement | null;
+  const countEl = document.getElementById("search-count");
+  const triggers = document.querySelectorAll<HTMLButtonElement>("[data-search-open]");
+
+  if (dialog && input && list) {
+    const kbd = document.getElementById("search-kbd");
+    if (kbd && /mac/i.test(navigator.userAgent)) kbd.textContent = "⌘ K";
+
+    let index: SearchItem[] | null = null;
+    let results: SearchItem[] = [];
+    let active = -1;
+    let restoreFocus: HTMLElement | null = null;
+    let composing = false;
+    let debounce = 0;
+
+    const ensureIndex = () =>
+      fetch("/search.json")
+        .then((r) => r.json() as Promise<SearchItem[]>)
+        .then((data) => {
+          index = data;
+        })
+        .catch(() => {
+          index = [];
+        });
+
+    function open() {
+      restoreFocus = document.activeElement as HTMLElement | null;
+      if (!dialog.open) dialog.showModal();
+      requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+      });
+      render();
+      void ensureIndex().then(render);
+    }
+
+    function esc(s: string): string {
+      return s.replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
+      );
+    }
+
+    /** 命中片段加 <mark>；先转义再定位，避免 markdown 内容里的 HTML 注入 */
+    function highlight(text: string, q: string): string {
+      const safe = esc(text);
+      if (!q) return safe;
+      const i = safe.toLowerCase().indexOf(esc(q).toLowerCase());
+      return i === -1
+        ? safe
+        : safe.slice(0, i) + "<mark>" + safe.slice(i, i + q.length) + "</mark>" + safe.slice(i + q.length);
+    }
+
+    /** 从描述或正文取首个命中处前后的一段文字 */
+    function snippet(item: SearchItem, q: string): string {
+      if (!q) return item.description;
+      const source = item.description || item.body;
+      const i = source.toLowerCase().indexOf(q);
+      if (i === -1) return source.slice(0, 72);
+      const start = Math.max(0, i - 20);
+      const end = Math.min(source.length, i + q.length + 52);
+      return (start > 0 ? "…" : "") + source.slice(start, end) + (end < source.length ? "…" : "");
+    }
+
+    function badge(item: SearchItem): string {
+      return item.type === "post"
+        ? '<span class="mt-0.5 shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-px font-mono text-[10px] text-primary">文章</span>'
+        : '<span class="mt-0.5 shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2 py-px font-mono text-[10px] text-accent">项目</span>';
+    }
+
+    function itemHTML(item: SearchItem, i: number, q: string): string {
+      const snip = snippet(item, q);
+      return `<li role="option" id="search-opt-${i}" aria-selected="${i === active}"
+        data-index="${i}" class="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2.5 data-[active]:bg-primary/10">
+        ${badge(item)}
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-medium leading-snug">${highlight(item.title, q)}</p>
+          ${snip ? `<p class="mt-0.5 truncate text-xs leading-relaxed text-muted">${highlight(snip, q)}</p>` : ""}
+        </div>
+        <span class="mt-0.5 shrink-0 font-mono text-[10px] text-muted/70">${esc(item.meta)}</span>
+      </li>`;
+    }
+
+    function score(item: SearchItem, q: string): number {
+      let s = 0;
+      if (item.title.toLowerCase().includes(q)) s += 10;
+      if (item.extra.toLowerCase().includes(q)) s += 5;
+      if (item.tags.some((t) => t.toLowerCase().includes(q))) s += 5;
+      if (item.description.toLowerCase().includes(q)) s += 3;
+      if (item.body.toLowerCase().includes(q)) s += 1;
+      return s;
+    }
+
+    function render() {
+      if (!index) return;
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        // 空查询：置顶 + 最新，作为快速访问入口
+        const pinned = index.filter((i) => i.pinned);
+        const rest = index.filter((i) => !i.pinned);
+        results = [...pinned, ...rest].slice(0, 6);
+        list.innerHTML =
+          '<li role="presentation" class="px-3 pb-1 pt-2 font-mono text-[10px] tracking-wider text-muted/70">快速访问</li>' +
+          results.map((item, i) => itemHTML(item, i, "")).join("");
+        if (countEl) countEl.textContent = "";
+      } else {
+        results = index
+          .map((item) => ({ item, s: score(item, q) }))
+          .filter((r) => r.s > 0)
+          .sort((a, b) => b.s - a.s)
+          .map((r) => r.item)
+          .slice(0, 8);
+        list.innerHTML = results.length
+          ? results.map((item, i) => itemHTML(item, i, q)).join("")
+          : `<li class="px-3 py-8 text-center text-sm text-muted">未找到与「${esc(input.value.trim())}」相关的内容</li>`;
+        if (countEl) countEl.textContent = `共 ${results.length} 条`;
+      }
+      active = results.length ? 0 : -1;
+      paint();
+    }
+
+    function paint(scroll = false) {
+      list.querySelectorAll<HTMLElement>("li[data-index]").forEach((li) => {
+        const on = Number(li.dataset.index) === active;
+        li.toggleAttribute("data-active", on);
+        li.setAttribute("aria-selected", String(on));
+      });
+      if (active >= 0) input.setAttribute("aria-activedescendant", `search-opt-${active}`);
+      else input.removeAttribute("aria-activedescendant");
+      if (scroll) document.getElementById(`search-opt-${active}`)?.scrollIntoView({ block: "nearest" });
+    }
+
+    function go(i: number) {
+      const item = results[i];
+      if (item) location.href = item.url;
+    }
+
+    function isEditable(t: EventTarget | null): boolean {
+      return (
+        t instanceof HTMLElement &&
+        (t.isContentEditable || t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")
+      );
+    }
+
+    triggers.forEach((t) => t.addEventListener("click", open));
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (dialog.open) dialog.close();
+        else open();
+      } else if (
+        e.key === "/" &&
+        !dialog.open &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        !isEditable(e.target)
+      ) {
+        e.preventDefault();
+        open();
+      }
+    });
+
+    // 点击面板以外的 backdrop 区域关闭：此时 e.target 恰好是 dialog 自身
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+
+    // 输入法组合中按 esc 只取消候选，不关弹窗
+    dialog.addEventListener("cancel", (e) => {
+      if (composing) e.preventDefault();
+    });
+
+    dialog.addEventListener("close", () => {
+      restoreFocus?.focus();
+      window.clearTimeout(debounce);
+    });
+
+    input.addEventListener("compositionstart", () => {
+      composing = true;
+    });
+    input.addEventListener("compositionend", () => {
+      composing = false;
+      render();
+    });
+
+    input.addEventListener("input", () => {
+      window.clearTimeout(debounce);
+      debounce = window.setTimeout(render, 150);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      // 输入法选词的回车/方向键不参与导航
+      if (e.isComposing || composing) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!results.length) return;
+        active = (active + (e.key === "ArrowDown" ? 1 : -1) + results.length) % results.length;
+        paint(true);
+      } else if (e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        if (!results.length) return;
+        active = e.key === "Home" ? 0 : results.length - 1;
+        paint(true);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        go(active);
+      }
+    });
+
+    list.addEventListener("click", (e) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>("li[data-index]");
+      if (li) go(Number(li.dataset.index));
+    });
+
+    // 鼠标悬停与键盘导航共用同一个激活态
+    list.addEventListener("mousemove", (e) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>("li[data-index]");
+      if (li && Number(li.dataset.index) !== active) {
+        active = Number(li.dataset.index);
+        paint();
+      }
+    });
+  }
+</script>
