@@ -70,10 +70,12 @@
 
 .prose-custom h2 {
   @apply mt-12 mb-4 text-2xl font-bold tracking-tight;
+  scroll-margin-top: 5rem; /* 锚点跳转时避开吸顶导航栏 */
 }
 
 .prose-custom h3 {
   @apply mt-10 mb-3 text-xl font-bold tracking-tight;
+  scroll-margin-top: 5rem;
 }
 
 .prose-custom a {

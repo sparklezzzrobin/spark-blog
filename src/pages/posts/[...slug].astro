@@ -13,8 +13,11 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const { title, description, pubDate, updated, tags, series } = post.data;
+
+// 目录只取二级、三级标题
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
 const posts = (await getCollection("posts")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
@@ -28,67 +31,154 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
 <Layout title={title} description={description}>
-  <article class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-    <header class="mb-10 border-b border-border pb-8">
-      {
-        series && (
-          <p class="mb-3 font-mono text-xs text-accent">
-            {series} 系列
-          </p>
-        )
-      }
-      <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-        {title}
-      </h1>
-      <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted">
-        <time datetime={pubDate.toISOString()}>{fmt(pubDate)}</time>
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="gap-10 py-12 xl:flex">
+      <article class="min-w-0 max-w-3xl flex-1">
+        <header class="mb-10 border-b border-border pb-8">
+          {
+            series && (
+              <p class="mb-3 font-mono text-xs text-accent">
+                {series} 系列
+              </p>
+            )
+          }
+          <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+            {title}
+          </h1>
+          <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted">
+            <time datetime={pubDate.toISOString()}>{fmt(pubDate)}</time>
+            {
+              updated && (
+                <span>
+                  · 更新于 <time datetime={updated.toISOString()}>{fmt(updated)}</time>
+                </span>
+              )
+            }
+            <span class="text-border">|</span>
+            {tags.map((t) => (
+              <a href={`/posts/?tag=${t}`} class="hover:text-primary">
+                #{t}
+              </a>
+            ))}
+          </div>
+        </header>
+
+        <!-- 移动端 / 平板：文首折叠目录（xl 及以上隐藏，改用右侧常驻目录） -->
         {
-          updated && (
-            <span>
-              · 更新于 <time datetime={updated.toISOString()}>{fmt(updated)}</time>
-            </span>
+          toc.length > 1 && (
+            <details class="mb-10 rounded-lg border border-border xl:hidden">
+              <summary class="cursor-pointer select-none px-4 py-3 font-mono text-xs text-muted">
+                ▸ 目录（{toc.length} 节）
+              </summary>
+              <nav class="border-t border-border px-4 py-3">
+                {toc.map((h) => (
+                  <a
+                    href={`#${h.slug}`}
+                    class:list={[
+                      "block py-1 text-sm text-muted hover:text-primary",
+                      h.depth === 3 ? "pl-5 text-[13px]" : "pl-1",
+                    ]}
+                  >
+                    {h.text}
+                  </a>
+                ))}
+              </nav>
+            </details>
           )
         }
-        <span class="text-border">|</span>
-        {tags.map((t) => (
-          <a href={`/posts/?tag=${t}`} class="hover:text-primary">
-            #{t}
-          </a>
-        ))}
-      </div>
-    </header>
 
-    <div class="prose-custom fade-up">
-      <Content />
+        <div class="prose-custom fade-up">
+          <Content />
+        </div>
+
+        {
+          (older || newer) && (
+            <nav class="mt-16 grid gap-3 border-t border-border pt-8 sm:grid-cols-2">
+              {older && (
+                <a
+                  href={`/posts/${older.id}/`}
+                  class="group rounded-lg border border-border p-4 transition-colors hover:border-primary/50"
+                >
+                  <span class="font-mono text-xs text-muted">← 上一篇</span>
+                  <p class="mt-1 text-sm font-medium group-hover:text-primary">
+                    {older.data.title}
+                  </p>
+                </a>
+              )}
+              {newer && (
+                <a
+                  href={`/posts/${newer.id}/`}
+                  class="group rounded-lg border border-border p-4 text-right transition-colors hover:border-primary/50 sm:col-start-2"
+                >
+                  <span class="font-mono text-xs text-muted">下一篇 →</span>
+                  <p class="mt-1 text-sm font-medium group-hover:text-primary">
+                    {newer.data.title}
+                  </p>
+                </a>
+              )}
+            </nav>
+          )
+        }
+      </article>
+
+      <!-- 桌面端：右侧常驻目录，随滚动高亮当前章节 -->
+      {
+        toc.length > 1 && (
+          <aside class="hidden w-60 shrink-0 xl:block">
+            <div class="sticky top-20">
+              <p class="mb-3 font-mono text-xs text-muted">// 目录</p>
+              <nav id="toc" class="border-l border-border">
+                {toc.map((h) => (
+                  <a
+                    href={`#${h.slug}`}
+                    data-toc-link={h.slug}
+                    class:list={[
+                      "-ml-px block border-l-2 border-transparent py-1.5 pr-2 text-sm leading-snug text-muted transition-colors hover:text-primary",
+                      h.depth === 3 ? "pl-7 text-[13px]" : "pl-4",
+                    ]}
+                  >
+                    {h.text}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </aside>
+        )
+      }
     </div>
-
-    {
-      (older || newer) && (
-        <nav class="mt-16 grid gap-3 border-t border-border pt-8 sm:grid-cols-2">
-          {older && (
-            <a
-              href={`/posts/${older.id}/`}
-              class="group rounded-lg border border-border p-4 transition-colors hover:border-primary/50"
-            >
-              <span class="font-mono text-xs text-muted">← 上一篇</span>
-              <p class="mt-1 text-sm font-medium group-hover:text-primary">
-                {older.data.title}
-              </p>
-            </a>
-          )}
-          {newer && (
-            <a
-              href={`/posts/${newer.id}/`}
-              class="group rounded-lg border border-border p-4 text-right transition-colors hover:border-primary/50 sm:col-start-2"
-            >
-              <span class="font-mono text-xs text-muted">下一篇 →</span>
-              <p class="mt-1 text-sm font-medium group-hover:text-primary">
-                {newer.data.title}
-              </p>
-            </a>
-          )}
-        </nav>
-      )
-    }
-  </article>
+  </div>
 </Layout>
+
+<script>
+  // 滚动高亮：当前阅读位置的目录项变主色（安静的生命感）
+  const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]");
+  if (links.length > 0) {
+    const sections = [...links]
+      .map((link) => document.getElementById(link.dataset.tocLink ?? ""))
+      .filter((el): el is HTMLElement => el !== null);
+
+    let ticking = false;
+    const highlight = () => {
+      ticking = false;
+      // 找到当前视口顶部之上最后一个标题（顶部留出导航栏高度）
+      let current = sections[0];
+      for (const s of sections) {
+        if (s.getBoundingClientRect().top < 96) current = s;
+      }
+      links.forEach((link) => {
+        const on = link.dataset.tocLink === current?.id;
+        link.classList.toggle("text-primary", on);
+        link.classList.toggle("border-primary", on);
+        link.classList.toggle("font-medium", on);
+      });
+    };
+
+    addEventListener("scroll", () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(highlight);
+      }
+    }, { passive: true });
+    highlight();
+  }
+</script>
