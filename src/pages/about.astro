@@ -1,12 +1,25 @@
 ---
+import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
+import ProfileCard from "../components/ProfileCard.astro";
 
-// TODO: 以下个人信息为占位内容，上线前替换为真实信息
 const skills = [
   { group: "地理空间", items: ["ArcGIS / QGIS", "ENVI", "遥感影像处理", "制图"] },
   { group: "编程", items: ["Python", "GDAL / rasterio", "NumPy / pandas", "数据结构"] },
   { group: "正在学习", items: ["算法", "Web 开发", "JavaScript / TypeScript", "数据可视化"] },
 ];
+
+// TODO: 「现在」小节随手更新，让关于页保持新鲜（个人信息的占位符集中在 src/config.ts）
+const now = [
+  { label: "在学", text: "数据结构与算法 · JavaScript / TypeScript" },
+  { label: "在做", text: "这个博客本身——从设计规范、技术选型到部署上线的全过程" },
+  { label: "想做", text: "WebGIS / 地理数据可视化小项目" },
+];
+
+const [posts, projects] = await Promise.all([
+  getCollection("posts"),
+  getCollection("projects"),
+]);
 ---
 
 <Layout title="关于" description="关于 spark：GIS / 遥感方向，正在学习 Python 与现代 Web 开发。">
@@ -16,7 +29,9 @@ const skills = [
       <h1 class="text-3xl font-bold tracking-tight">关于我</h1>
     </header>
 
-    <section class="prose-custom">
+    <ProfileCard postCount={posts.length} projectCount={projects.length} />
+
+    <section class="prose-custom mt-10">
       <p>
         你好，我是 <strong>Spark</strong>。主修方向是
         <strong>GIS 与遥感</strong>，日常和影像、坐标、地图打交道。
@@ -51,28 +66,18 @@ const skills = [
     </section>
 
     <section class="mt-12">
-      <h2 class="mb-4 text-lg font-bold tracking-tight">联系我</h2>
-      <div class="flex flex-wrap gap-3">
-        <a
-          href="https://github.com/sparklezzzrobin"
-          target="_blank"
-          rel="noopener"
-          class="rounded-md border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
-        >
-          GitHub
-        </a>
-        <a
-          href="mailto:hello@example.com"
-          class="rounded-md border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
-        >
-          Email
-        </a>
-        <a
-          href="/rss.xml"
-          class="rounded-md border border-border px-4 py-2 font-mono text-sm text-muted transition-colors hover:border-primary/50 hover:text-primary"
-        >
-          RSS
-        </a>
+      <h2 class="mb-4 text-lg font-bold tracking-tight">现在</h2>
+      <div class="rounded-lg border border-border bg-card px-5 py-1">
+        <ul class="divide-y divide-border">
+          {
+            now.map(({ label, text }) => (
+              <li class="flex items-baseline gap-4 py-3">
+                <span class="w-10 shrink-0 font-mono text-xs text-primary">{label}</span>
+                <span class="text-sm leading-6 text-muted">{text}</span>
+              </li>
+            ))
+          }
+        </ul>
       </div>
     </section>
   </div>

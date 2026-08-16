@@ -1,22 +1,34 @@
 ---
+import { SITE } from "../config";
+
 const year = new Date().getFullYear();
-// TODO: 换成你所在城市的经纬度（个人签名式彩蛋）
-const coordinate = "30.67° N, 104.06° E";
 ---
 
 <footer class="border-t border-border">
   <div
     class="mx-auto flex max-w-4xl flex-col items-center gap-3 px-4 py-8 sm:flex-row sm:justify-between sm:px-6"
   >
-    <p class="font-mono text-xs text-muted">
-      <span class="text-accent">◈</span> {coordinate}
+    <p class="font-mono text-xs text-muted" id="geo-sign">
+      <span class="text-accent">◈</span> {SITE.location}
     </p>
 
     <div class="flex items-center gap-4 text-sm text-muted">
-      <a href="https://github.com/sparklezzzrobin" target="_blank" rel="noopener" class="hover:text-primary">
+      <a
+        href={SITE.socials.github.href}
+        target="_blank"
+        rel="noopener"
+        class="hover:text-primary"
+      >
         GitHub
       </a>
-      <a href="mailto:hello@example.com" class="hover:text-primary">Email</a>
+      <a
+        href={SITE.socials.email.href}
+        target="_blank"
+        rel="noopener"
+        class="hover:text-primary"
+      >
+        {SITE.socials.email.label}
+      </a>
     </div>
 
     <p class="font-mono text-xs text-muted">
@@ -24,3 +36,44 @@ const coordinate = "30.67° N, 104.06° E";
     </p>
   </div>
 </footer>
+
+<script>
+  // 页脚彩蛋：定位访客 IP，能查到就换成访客的位置，查不到就保留站长坐标
+  const el = document.getElementById("geo-sign");
+  if (el) {
+    // 多源兜底：ipwho.is / ipapi.co 带 IP + 城市，ipify 只保底 IP；任一成功即停
+    const sources = [
+      async () => {
+        const j = await (await fetch("https://ipwho.is/")).json();
+        if (!j.success || !j.ip) throw new Error("bad payload");
+        return j.city ? `${j.ip} · ${j.city}` : j.ip;
+      },
+      async () => {
+        const j = await (await fetch("https://ipapi.co/json/")).json();
+        if (!j.ip) throw new Error("bad payload");
+        return j.city ? `${j.ip} · ${j.city}` : j.ip;
+      },
+      async () => {
+        const j = await (await fetch("https://api.ipify.org?format=json")).json();
+        return j.ip;
+      },
+    ];
+
+    const withTimeout = (p: Promise<string>, ms: number) =>
+      Promise.race([p, new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
+
+    for (const load of sources) {
+      try {
+        const text = await withTimeout(load(), 3500);
+        el.textContent = "";
+        const dot = document.createElement("span");
+        dot.className = "text-accent";
+        dot.textContent = "◈ ";
+        el.append(dot, text);
+        break;
+      } catch {
+        // 该源失败（超时/被拦截），换下一个
+      }
+    }
+  }
+</script>
