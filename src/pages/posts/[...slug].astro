@@ -2,6 +2,7 @@
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import TocDialog from "../../components/TocDialog.astro";
+import BackToTop from "../../components/BackToTop.astro";
 
 export async function getStaticPaths() {
   const posts = (await getCollection("posts")).sort(
@@ -127,6 +128,9 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
   <!-- 移动端/平板：右下角悬浮按钮唤出目录抽屉，读中途随时可用 -->
   {toc.length > 1 && <TocDialog toc={toc} />}
+
+  <!-- 回顶按钮：滚过首屏后浮现；有目录按钮时停在其上方 -->
+  <BackToTop stacked={toc.length > 1} />
 </Layout>
 
 <script>

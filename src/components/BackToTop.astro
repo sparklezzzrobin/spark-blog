@@ -1,0 +1,84 @@
+---
+// 回顶按钮：长文读到深处一键回页首，与目录悬浮按钮同风格停靠右下角。
+// 触发机制：页面高度超过约 2.5 屏且滚动过首屏 3/4 后浮现，回到顶部隐去——
+// 短文不出现，页首不打扰。下方有目录按钮（<xl）时停在其上方，
+// 桌面端（xl，目录按钮隐藏）落回常规停靠位。
+interface Props {
+  stacked?: boolean; // 下方是否有目录悬浮按钮，决定停靠高度
+}
+const { stacked = false } = Astro.props;
+---
+
+<button
+  type="button"
+  data-backtop
+  aria-label="回到页首"
+  class:list={[
+    "invisible fixed right-4 z-40 flex h-12 w-12 translate-y-2 scale-95 items-center justify-center rounded-full border border-border bg-card/90 text-muted opacity-0 shadow-lg backdrop-blur transition hover:border-primary/50 hover:text-primary active:scale-95",
+    stacked
+      ? "bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] xl:bottom-[calc(env(safe-area-inset-bottom)+1.25rem)]"
+      : "bottom-[calc(env(safe-area-inset-bottom)+1.25rem)]",
+  ]}
+>
+  <svg
+    class="h-5 w-5"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.8"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"
+    ></path>
+  </svg>
+</button>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>("[data-backtop]");
+
+  if (btn) {
+    // 显隐：滚动过首屏 3/4 且页面确实够长（超出部分 > 1.5 屏）
+    let longEnough = false;
+    const update = () => {
+      const show = longEnough && scrollY > innerHeight * 0.75;
+      btn.classList.toggle("invisible", !show);
+      btn.classList.toggle("opacity-0", !show);
+      btn.classList.toggle("translate-y-2", !show);
+      btn.classList.toggle("scale-95", !show);
+    };
+    const measure = () => {
+      longEnough =
+        document.documentElement.scrollHeight - innerHeight > innerHeight * 1.5;
+      update();
+    };
+
+    let ticking = false;
+    addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(() => {
+            ticking = false;
+            update();
+          });
+        }
+      },
+      { passive: true },
+    );
+    addEventListener("resize", measure);
+    measure();
+
+    btn.addEventListener("click", () => {
+      scrollTo({
+        top: 0,
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+    });
+  }
+</script>
