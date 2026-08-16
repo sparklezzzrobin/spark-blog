@@ -7,9 +7,7 @@ English | [简体中文](README.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000000?logo=vercel&logoColor=white)](https://vercel.com)
 
-A contour-line-themed personal blog — the romance of maps, rendered as a website.
-
-The blog belongs to a GIS & remote sensing student learning web development. The whole site speaks a **contour line** design language: a site-wide background of two "mountains" drawn in contour arcs, a footer signed with latitude/longitude coordinates, and a contour-line favicon. Technically it stays minimal: fully static Astro output, no client-side framework, no runtime dependencies — interactions rely on native browser capabilities.
+A static personal blog built with Astro, themed around contour lines: the site-wide background is a contour-line graphic, the footer displays latitude/longitude coordinates, and the favicon is a contour-line mark. The site outputs fully static HTML with no client-side framework or runtime dependencies; interactivity uses native browser capabilities.
 
 **Live site: <https://spark-blog-phi.vercel.app>**
 
@@ -17,21 +15,23 @@ The blog belongs to a GIS & remote sensing student learning web development. The
 
 **Design**
 
-- 🗺️ **Contour design language** — site-wide contour background, coordinate-style footer, and a contour favicon; unmistakably GIS
-- 🌗 **Light & dark themes** — circular-reveal transition on toggle; code blocks use dual Shiki themes matching the site palette
-- 📍 **Null Island easter egg** — the footer defaults to `0.00°, 0.00°` (the equator–prime-meridian crossing, a classic GIS inside joke), replaced with the visitor's location once IP geolocation succeeds
+- Contour-line visual theme applied consistently to the background, footer coordinates, and favicon
+- Light and dark themes with a circular-reveal transition on toggle; code blocks use dual Shiki themes that follow the site palette
+- The footer defaults to the coordinates `0.00°, 0.00°` (the equator–prime meridian crossing) and is replaced with the visitor's location once IP geolocation succeeds
 
 **Features**
 
-- 🔍 **Global search** — `Cmd/Ctrl + K` opens a native `<dialog>`; the index is generated at build time as a static `/search.json` and lazy-loaded on first open
-- 📝 **Blog system** — Content Collections with zod validation, tag filtering, pinned posts, and series; a sticky TOC with scroll-spy on desktop (collapsed at the top on mobile); KaTeX math rendering
-- 📦 **Project pages** — detail pages driven by Markdown bodies, auto-linking related posts by shared tags
-- 📡 **Standard feeds** — RSS, sitemap, and Open Graph out of the box
+- Global search: `Cmd/Ctrl + K` opens a native `<dialog>`; the index is generated at build time as a static `/search.json` and lazy-loaded on first open
+- Blog system: Content Collections with zod validation, tag filtering, pinned posts, series archives, and KaTeX math rendering
+- Table of contents: a sticky sidebar TOC with scroll-spy on desktop article pages; on mobile, a floating button opens a bottom-sheet TOC
+- Back-to-top button on article pages
+- Project pages: detail pages driven by Markdown bodies, automatically linking related posts by shared tags
+- RSS, sitemap, and Open Graph support
 
 **Engineering**
 
-- ⚡ **Zero client-side framework** — fully static builds; search uses a native `dialog`, theme switching uses View Transitions, so interactivity ships almost no JS
-- 🎯 **Single source of truth** — name, signature, social links, and footer coordinates all live in [`src/config.ts`](src/config.ts); update your profile by editing one file
+- Fully static builds with no client-side framework: search uses a native `dialog` and theme switching uses View Transitions, keeping client-side JavaScript minimal
+- Personal info (name, signature, social links, footer coordinates) is centralized in [`src/config.ts`](src/config.ts)
 
 ## Tech Stack
 
@@ -63,8 +63,8 @@ npm run preview # Preview the build locally
 spark-blog/
 ├── public/                  # Static assets (favicon, etc.)
 ├── src/
-│   ├── components/          # Header, Footer, SearchDialog, ContourBackground, etc.
-│   ├── config.ts            # Single source of personal info — name / signature / socials
+│   ├── components/          # Header, Footer, SearchDialog, ContourBackground, TocDialog, BackToTop, etc.
+│   ├── config.ts            # Site profile configuration (name / signature / socials / footer coordinates)
 │   ├── content/
 │   │   ├── posts/           # Blog posts (Markdown + frontmatter)
 │   │   └── projects/        # Projects (Markdown + frontmatter)
@@ -77,12 +77,12 @@ spark-blog/
 
 ## Customization
 
-- **Personal info**: edit only [`src/config.ts`](src/config.ts) — name, signature, social links, and footer coordinates
-- **Writing posts**: add `YYYY-MM-DD-slug.md` under `src/content/posts/`; invalid frontmatter fails the build immediately
-- **Site URL**: update `site` in `astro.config.mjs` (it feeds absolute links in RSS / sitemap / OG tags)
+- **Personal info**: edit [`src/config.ts`](src/config.ts), which contains the name, signature, social links, and footer coordinates
+- **Writing posts**: add `YYYY-MM-DD-slug.md` under `src/content/posts/`; frontmatter is validated by a zod schema, and invalid fields fail the build
+- **Site URL**: update `site` in `astro.config.mjs`, which feeds absolute links in RSS / sitemap / Open Graph tags
 
 ## Links
 
-- 🌐 Live site: <https://spark-blog-phi.vercel.app>
-- 📡 RSS feed: <https://spark-blog-phi.vercel.app/rss.xml>
-- 💻 GitHub: <https://github.com/sparklezzzrobin>
+- Live site: <https://spark-blog-phi.vercel.app>
+- RSS feed: <https://spark-blog-phi.vercel.app/rss.xml>
+- GitHub: <https://github.com/sparklezzzrobin>
