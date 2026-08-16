@@ -1,0 +1,52 @@
+---
+import "../styles/global.css";
+import "katex/dist/katex.min.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "一个记录 GIS、遥感、Python 与数据可视化学习实践的个人博客。",
+} = Astro.props;
+
+const siteName = "spark.geo";
+const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content={siteName} />
+
+    <!-- 主题初始化：内联执行避免暗色模式闪白（FOUC） -->
+    <script is:inline>
+      const saved = localStorage.getItem("theme");
+      const preferDark = matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.toggle("dark", saved ? saved === "dark" : preferDark);
+    </script>
+  </head>
+  <body class="flex min-h-screen flex-col">
+    <Header />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

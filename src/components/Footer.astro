@@ -1,0 +1,26 @@
+---
+const year = new Date().getFullYear();
+// TODO: 换成你所在城市的经纬度（个人签名式彩蛋）
+const coordinate = "30.67° N, 104.06° E";
+---
+
+<footer class="border-t border-border">
+  <div
+    class="mx-auto flex max-w-4xl flex-col items-center gap-3 px-4 py-8 sm:flex-row sm:justify-between sm:px-6"
+  >
+    <p class="font-mono text-xs text-muted">
+      <span class="text-accent">◈</span> {coordinate}
+    </p>
+
+    <div class="flex items-center gap-4 text-sm text-muted">
+      <a href="https://github.com/" target="_blank" rel="noopener" class="hover:text-primary">
+        GitHub
+      </a>
+      <a href="mailto:hello@example.com" class="hover:text-primary">Email</a>
+    </div>
+
+    <p class="font-mono text-xs text-muted">
+      © {year} spark.geo · <a href="/rss.xml" class="hover:text-primary">RSS</a>
+    </p>
+  </div>
+</footer>
