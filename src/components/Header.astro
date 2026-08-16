@@ -76,8 +76,60 @@ const isActive = (href: string) =>
 </header>
 
 <script>
-  document.getElementById("theme-toggle")?.addEventListener("click", () => {
-    const isDark = document.documentElement.classList.toggle("dark");
+  const toggle = document.getElementById("theme-toggle");
+
+  function setTheme(isDark: boolean) {
+    document.documentElement.classList.toggle("dark", isDark);
     localStorage.setItem("theme", isDark ? "dark" : "light");
+  }
+
+  toggle?.addEventListener("click", (event) => {
+    const isDark = !document.documentElement.classList.contains("dark");
+
+    // 不支持 View Transitions、或用户偏好减少动效：直接切换
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!document.startViewTransition || reduceMotion) {
+      setTheme(isDark);
+      return;
+    }
+
+    // 键盘触发时 clientX/Y 为 0，回退到按钮中心作为圆心
+    const rect = toggle.getBoundingClientRect();
+    const x = event.clientX || rect.left + rect.width / 2;
+    const y = event.clientY || rect.top + rect.height / 2;
+
+    // 圆半径取圆心到视口四个角的最大距离，保证铺满
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y),
+    );
+
+    const transition = document.startViewTransition(() => setTheme(isDark));
+
+    transition.ready
+      .then(() => {
+        // 圆心与半径都用百分比表达：部分浏览器在 DPR≠1（显示缩放）时，
+        // view-transition 伪元素坐标系与 CSS 像素存在缩放差，px 值会让圆心
+        // 偏移、半径不足；百分比相对伪元素自身盒子解析，不受缩放影响。
+        // circle() 的百分比半径按 sqrt(w²+h²)/√2 解析，故换算出等效百分比。
+        const cx = ((x / innerWidth) * 100).toFixed(3);
+        const cy = ((y / innerHeight) * 100).toFixed(3);
+        const r =
+          ((endRadius * Math.SQRT2 * 100) / Math.hypot(innerWidth, innerHeight)).toFixed(3);
+        // 两个方向都从按钮向外"发布"新主题的遮罩（不反向收回）
+        const circle = [
+          `circle(0% at ${cx}% ${cy}%)`,
+          `circle(${r}% at ${cx}% ${cy}%)`,
+        ];
+        document.documentElement.animate(
+          { clipPath: circle },
+          {
+            duration: 500,
+            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            pseudoElement: "::view-transition-new(root)",
+          },
+        );
+      })
+      .catch(() => {});
   });
 </script>

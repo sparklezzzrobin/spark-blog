@@ -11,6 +11,8 @@
   --color-muted: var(--muted);
   --color-primary: var(--primary);
   --color-primary-strong: var(--primary-strong);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-deep-strong: var(--primary-deep-strong);
   --color-accent: var(--accent);
   --color-border: var(--border);
 
@@ -22,25 +24,33 @@
 }
 
 :root {
+  color-scheme: light;
   --bg: #fafafa;
   --card: #ffffff;
   --fg: #18181b;
   --muted: #71717a;
   --primary: #0d7377; /* 深青：水体/植被遥感色系 */
   --primary-strong: #0a5c5f;
+  /* 深档主色：大字号/实底填充场景。浅色下与主色同值，观感不变 */
+  --primary-deep: #0d7377;
+  --primary-deep-strong: #0a5c5f;
   --accent: #c2a878; /* 暖沙：等高线点缀色 */
   --border: #e4e4e7;
 }
 
 .dark {
+  color-scheme: dark; /* 滚动条、表单控件等原生 UI 跟随深色 */
   --bg: #0f1115;
   --card: #171a21;
   --fg: #e4e4e7;
   --muted: #9ca3af;
-  --primary: #2dd4bf;
-  --primary-strong: #5eead4;
+  --primary: #73c9c1; /* oklch(0.78 0.085 188)：降饱和、色相回摆，贴近浅色主色的墨青气质 */
+  --primary-strong: #95dad1;
+  /* 大面积主色会放大观感饱和度：标题大字与实底按钮改用深档，白字可达 4.5:1 */
+  --primary-deep: #43817b;
+  --primary-deep-strong: #55938e;
   --accent: #d8c39a;
-  --border: #27272a;
+  --border: #2a303b; /* 与 bg/card 同色相的蓝调，替代偏紫的纯灰 */
 }
 
 @layer base {
@@ -141,6 +151,14 @@
   background-color: var(--shiki-dark-bg) !important;
   font-style: var(--shiki-dark-font-style) !important;
   font-weight: var(--shiki-dark-font-weight) !important;
+}
+
+/* ---------- 主题切换：以按钮为圆心的圆形扩散过渡 ---------- */
+/* 关掉默认交叉淡入，改由 JS 对 ::view-transition-new(root) 做 clip-path 动画 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 /* 页面进入动画：安静的生命感 */
