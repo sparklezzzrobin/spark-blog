@@ -226,6 +226,65 @@ html:has(#search-dialog[open]) {
   }
 }
 
+/* ---------- 移动端目录抽屉 ---------- */
+/* 底部抽屉落在拇指热区，与右下角悬浮按钮同侧；sm 及以上改为贴右下的小面板 */
+#toc-dialog {
+  width: 100%;
+  max-width: none;
+  margin: auto auto 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 0.75rem 0.75rem 0 0;
+  box-shadow: 0 -12px 40px -12px rgb(0 0 0 / 0.35);
+  color: var(--fg);
+  padding-bottom: env(safe-area-inset-bottom); /* 避开 iOS 底部小黑条 */
+}
+
+@media (min-width: 640px) {
+  #toc-dialog {
+    width: auto;
+    max-width: 22rem;
+    margin: auto 1.25rem calc(1.25rem + env(safe-area-inset-bottom)) auto;
+    border-bottom-width: 1px;
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.35);
+  }
+}
+
+#toc-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(2px);
+  animation: search-fade 150ms ease-out;
+}
+
+#toc-dialog[open] {
+  animation: toc-slide 200ms ease-out;
+}
+
+@keyframes toc-slide {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 打开时锁背景滚动，同搜索弹窗 */
+html:has(#toc-dialog[open]) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #toc-dialog[open],
+  #toc-dialog::backdrop {
+    animation: none;
+  }
+}
+
 /* 页面进入动画：安静的生命感 */
 @keyframes fade-up {
   from {

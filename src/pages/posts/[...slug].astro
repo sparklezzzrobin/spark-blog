@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import TocDialog from "../../components/TocDialog.astro";
 
 export async function getStaticPaths() {
   const posts = (await getCollection("posts")).sort(
@@ -63,30 +64,6 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
           </div>
         </header>
 
-        <!-- 移动端 / 平板：文首折叠目录（xl 及以上隐藏，改用右侧常驻目录） -->
-        {
-          toc.length > 1 && (
-            <details class="mb-10 rounded-lg border border-border xl:hidden">
-              <summary class="cursor-pointer select-none px-4 py-3 font-mono text-xs text-muted">
-                ▸ 目录（{toc.length} 节）
-              </summary>
-              <nav class="border-t border-border px-4 py-3">
-                {toc.map((h) => (
-                  <a
-                    href={`#${h.slug}`}
-                    class:list={[
-                      "block py-1 text-sm text-muted hover:text-primary",
-                      h.depth === 3 ? "pl-5 text-[13px]" : "pl-1",
-                    ]}
-                  >
-                    {h.text}
-                  </a>
-                ))}
-              </nav>
-            </details>
-          )
-        }
-
         <div class="prose-custom fade-up">
           <Content />
         </div>
@@ -147,6 +124,9 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
       }
     </div>
   </div>
+
+  <!-- 移动端/平板：右下角悬浮按钮唤出目录抽屉，读中途随时可用 -->
+  {toc.length > 1 && <TocDialog toc={toc} />}
 </Layout>
 
 <script>

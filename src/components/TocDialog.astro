@@ -1,0 +1,81 @@
+---
+// 移动端/平板目录：右下角悬浮按钮 + 原生 dialog 底部抽屉，读到一半也能随时唤出。
+// xl 及以上由右侧常驻目录接管（按钮隐藏）；链接带 data-toc-link，
+// 复用页面里的滚动高亮脚本，打开抽屉即见当前章节。
+interface Props {
+  toc: { depth: number; slug: string; text: string }[];
+}
+const { toc } = Astro.props;
+---
+
+<!-- 悬浮按钮：fixed 定位停靠右下角，避开 iOS 底部小黑条 -->
+<button
+  type="button"
+  data-toc-open
+  aria-label="打开目录"
+  class="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card/90 text-muted shadow-lg backdrop-blur transition hover:border-primary/50 hover:text-primary active:scale-95 xl:hidden"
+>
+  <svg
+    class="h-5 w-5"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.8"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M3.75 5.25h16.5m-16.5 4.5h12.75m-12.75 4.5h16.5m-16.5 4.5h12.75"
+    ></path>
+  </svg>
+</button>
+
+<!-- 抽屉本体：原生 dialog 位于 top layer，天然盖过吸顶导航，无需 z-index -->
+<dialog id="toc-dialog" aria-label="文章目录">
+  <div class="flex items-center justify-between border-b border-border px-4 py-3">
+    <p class="font-mono text-xs text-muted">// 目录</p>
+    <span class="font-mono text-[11px] text-muted/70">{toc.length} 节</span>
+  </div>
+  <nav class="max-h-[60vh] overflow-y-auto overscroll-contain p-2">
+    {
+      toc.map((h) => (
+        <a
+          href={`#${h.slug}`}
+          data-toc-link={h.slug}
+          class:list={[
+            "block rounded-md px-3 py-2 text-sm leading-snug text-muted transition-colors hover:bg-primary/10 hover:text-primary",
+            h.depth === 3 && "pl-6 text-[13px]",
+          ]}
+        >
+          {h.text}
+        </a>
+      ))
+    }
+  </nav>
+</dialog>
+
+<script>
+  const dialog = document.getElementById("toc-dialog") as HTMLDialogElement | null;
+  const openBtn = document.querySelector<HTMLButtonElement>("[data-toc-open]");
+
+  if (dialog && openBtn) {
+    openBtn.addEventListener("click", () => {
+      dialog.showModal();
+      // 长目录直接滚到当前章节，省得自己找
+      requestAnimationFrame(() => {
+        dialog
+          .querySelector("a.text-primary")
+          ?.scrollIntoView({ block: "center" });
+      });
+    });
+
+    // 点目录项关抽屉，锚点跳转交给浏览器默认行为；
+    // 点抽屉以外的 backdrop 区域同样关闭（此时 e.target 恰好是 dialog 自身）
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog || e.target instanceof HTMLAnchorElement) {
+        dialog.close();
+      }
+    });
+  }
+</script>
