@@ -7,7 +7,14 @@ import ProjectCard from "../components/ProjectCard.astro";
 const posts = (await getCollection("posts")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
-const latestPosts = posts.slice(0, 5);
+// 首页"最新文章"：置顶优先，其余按时间倒序；列表页保持纯时间序
+const latestPosts = [...posts]
+  .sort(
+    (a, b) =>
+      Number(b.data.pinned) - Number(a.data.pinned) ||
+      b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  )
+  .slice(0, 5);
 
 const featuredProjects = (await getCollection("projects"))
   .filter((p) => p.data.featured)
